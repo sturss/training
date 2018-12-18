@@ -1,7 +1,3 @@
 from kafka import KafkaProducer
 
-producer = KafkaProducer(retries=5)
-
-
-class Producer:
-    pass
+producer = KafkaProducer(retries=5, bootstrap_servers=['kafka:9092'])

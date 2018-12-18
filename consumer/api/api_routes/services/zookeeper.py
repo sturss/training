@@ -1,9 +1,10 @@
 
 from kazoo.client import KazooClient
 
+from api.config import Configs
 
 class ZookeeperManager:
-    connection = KazooClient(hosts='127.0.0.1:2181')
+    connection = KazooClient(hosts=f"{Configs['ZOOKEEPER_HOST']}:{Configs['ZOOKEEPER_PORT']}")
     connection.start()
 
     @classmethod

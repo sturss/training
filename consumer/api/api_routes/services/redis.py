@@ -1,10 +1,10 @@
-
-
 import redis as rd
+
+from api.config import Configs
 
 
 class RedisManager:
-    connection = rd.StrictRedis(host='localhost', port=6379)
+    connection = rd.StrictRedis(host=Configs['REDIS_HOST'], port=Configs['REDIS_PORT'])
 
     @classmethod
     def ensure_record(cls, key, value=0):

@@ -25,7 +25,7 @@ async def init_postgres():
 async def init_cassandra():
     from cassandra.cluster import Cluster
 
-    cluster = Cluster()
+    cluster = Cluster(Configs['CASSANDRA_HOST'])
     session = cluster.connect()
     try:
         session.execute(f"""

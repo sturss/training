@@ -36,6 +36,7 @@ class Consumer:
         OffsetStorage.ensure_record('offset', value=0)
         loop = asyncio.get_event_loop()
         cls.consumer = AIOKafkaConsumer('movies',
+                                        bootstrap_servers=Configs['KAFKA_SERVERS'],
                                         loop=loop,
                                         auto_offset_reset='earliest',
                                         enable_auto_commit=False,
