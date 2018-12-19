@@ -7,12 +7,16 @@ from sanic.response import json, json_dumps
 from sanic.views import HTTPMethodView
 
 from api.api_routes.services.kafka import producer
+from api.app import logger
 
 
 class Message(HTTPMethodView):
     async def get(self, request: Request):
-        date = datetime.datetime.utcnow().isoformat()
-        print(str(date))
-        producer.send('movies', json_dumps({'title': 'Movie 1',
-                                            'release_date': date}).encode('utf-8'))
+        message = json_dumps({'title': 'New Movie 1',
+                              'release_date': datetime.datetime.utcnow().isoformat()})
+        try:
+            producer.send('movie', message.encode('utf-8'))
+        except Exception as e:
+            logger.critical(e)
+        logger.critical("Message %s has been successfully sent to topic movies", message)
         return json({}, HTTPStatus.OK)

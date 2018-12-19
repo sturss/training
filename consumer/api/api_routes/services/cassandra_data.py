@@ -4,11 +4,21 @@ from cassandra.cluster import Cluster
 from cassandra.query import SimpleStatement, ConsistencyLevel
 
 from api.config import Configs
+from api.logger import logger
 
 
 async def insert_movie(movie):
-    cluster = Cluster()
-    session = cluster.connect(Configs['CASSANDRA_KEYSPACE'])
+    session = None
+
+    for i in range(Configs['CASSANDRA_RETRIES']):
+        try:
+            cluster = Cluster()
+            session = cluster.connect(Configs['CASSANDRA_KEYSPACE'])
+            break
+        except Exception as e:
+            logger.error("Couldn't connect to Cassandra database, try again in %s seconds: %s",
+                         Configs['CASSANDRA_RETRY_TIME'], e)
+            raise ConnectionError("Couldn't connect to Cassandra database")
 
     try:
         query = SimpleStatement(f"""
@@ -16,6 +26,5 @@ async def insert_movie(movie):
             VALUES(%(i)s, %(t)s, %(d)s)
         """, consistency_level=ConsistencyLevel.ONE)
         session.execute(query, {'i': uuid.uuid4(), 't': movie['title'], 'd': movie['release_date']})
-        print(f'successfully inserted {movie}')
     except Exception as e:
-        print(e)
+        logger.critical("Couldn't insert a new value into Cassandra database %s", e)

@@ -1,6 +1,7 @@
 
 from api.models import models
 from api.config import Configs
+from api.logger import logger
 
 
 async def init_postgres():
@@ -8,24 +9,25 @@ async def init_postgres():
     from sqlalchemy.sql.ddl import CreateTable
 
     async with create_engine(
-        user=Configs['DATABASE_USER'],
-        database=Configs['DATABASE_NAME'],
-        host=Configs['DATABASE_ADDRESS'],
-        password=Configs['DATABASE_PASSWORD']
+        user=Configs['POSTGRES_USER'],
+        database=Configs['POSTGRES_DATABASE'],
+        host=Configs['POSTGRES_ADDRESS'],
+        password=Configs['POSTGRES_PASSWORD']
     ) as engine:
         async with engine.acquire() as conn:
             for model in models:
                 try:
                     await conn.execute(CreateTable(model))
-                    print(f'created table {model.name}')
-                except Exception as ex:
-                    print(ex)
+                    logger.info(f'Table {model.name} has been successfully created')
+                except Exception as e:
+                    logger.error(f'Encountered an error when creating a table %s: %s', model.name, e)
+
 
 
 async def init_cassandra():
     from cassandra.cluster import Cluster
 
-    cluster = Cluster()
+    cluster = Cluster([Configs['CASSANDRA_HOST']])
     session = cluster.connect()
     try:
         session.execute(f"""
@@ -33,7 +35,7 @@ async def init_cassandra():
             WITH replication={{'class': 'SimpleStrategy', 'replication_factor': 1 }}
         """)
     except Exception as e:
-        print(e)
+        logger.error(f'Encountered an error when creating a keyspace %s: %s', Configs['CASSANDRA_KEYSPACE'], e)
 
     try:
         session.set_keyspace(Configs['CASSANDRA_KEYSPACE'])
@@ -46,7 +48,8 @@ async def init_cassandra():
             )           
         """)
     except Exception as e:
-        print(e)
+        logger.error(f'Encountered an error when creating a table movie: %s', e)
+
 
 
 

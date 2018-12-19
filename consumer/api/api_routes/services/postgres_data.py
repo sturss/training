@@ -6,13 +6,25 @@ from api.models import Movie
 
 async def insert_movie(movie):
     async with create_engine(
-        user=Configs['DATABASE_USER'],
-        database=Configs['DATABASE_NAME'],
-        host=Configs['DATABASE_ADDRESS'],
-        password=Configs['DATABASE_PASSWORD']
+        user=Configs['POSTGRES_USER'],
+        database=Configs['POSTGRES_DATABASE'],
+        host=Configs['POSTGRES_ADDRESS'],
+        password=Configs['POSTGRES_PASSWORD']
     ) as engine:
         async with engine.acquire() as conn:
             async with conn.begin():
                 await conn.execute(Movie.insert().values(movie))
-    print(f'successfully inserted {movie}')
+
+
+async def get_movies():
+    async with create_engine(
+        user=Configs['POSTGRES_USER'],
+        database=Configs['POSTGRES_DATABASE'],
+        host=Configs['POSTGRES_ADDRESS'],
+        password=Configs['POSTGRES_PASSWORD']
+    ) as engine:
+        async with engine.acquire() as conn:
+            async with conn.execute(Movie.select()) as cur:
+                return cur.rowcount
+
 
