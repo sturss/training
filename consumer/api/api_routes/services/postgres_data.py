@@ -16,7 +16,7 @@ async def insert_movie(movie):
                 await conn.execute(Movie.insert().values(movie))
 
 
-async def get_movies(movie):
+async def get_movies():
     async with create_engine(
         user=Configs['POSTGRES_USER'],
         database=Configs['POSTGRES_DATABASE'],
@@ -24,8 +24,7 @@ async def get_movies(movie):
         password=Configs['POSTGRES_PASSWORD']
     ) as engine:
         async with engine.acquire() as conn:
-            async with conn.cursor() as cur:
-                await cur.execute(Movie.select().values(movie))
-                print(cur)
+            async with conn.execute(Movie.select()) as cur:
+                return cur.rowcount
 
 

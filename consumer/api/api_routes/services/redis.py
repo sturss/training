@@ -1,9 +1,11 @@
 import redis as rd
 
 from api.config import Configs
+from api.logger import logger
 
 
 class RedisManager:
+    logger.info("Establishing connection with Redis: %s:%s", Configs['REDIS_HOST'], Configs['REDIS_PORT'])
     connection = rd.StrictRedis(host=Configs['REDIS_HOST'], port=Configs['REDIS_PORT'])
 
     @classmethod
