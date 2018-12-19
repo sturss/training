@@ -1,6 +1,7 @@
 
 from api.models import models
 from api.config import Configs
+from api.logger import logger
 
 
 async def init_postgres():
@@ -17,9 +18,10 @@ async def init_postgres():
             for model in models:
                 try:
                     await conn.execute(CreateTable(model))
-                    print(f'created table {model.name}')
-                except Exception as ex:
-                    print(ex)
+                    logger.info(f'Table {model.name} has been successfully created')
+                except Exception as e:
+                    logger.error(f'Encountered an error when creating a table %s: %s', model.name, e)
+
 
 
 async def init_cassandra():
@@ -33,7 +35,7 @@ async def init_cassandra():
             WITH replication={{'class': 'SimpleStrategy', 'replication_factor': 1 }}
         """)
     except Exception as e:
-        print(e)
+        logger.error(f'Encountered an error when creating a keyspace %s: %s', Configs['CASSANDRA_KEYSPACE'], e)
 
     try:
         session.set_keyspace(Configs['CASSANDRA_KEYSPACE'])
@@ -46,7 +48,8 @@ async def init_cassandra():
             )           
         """)
     except Exception as e:
-        print(e)
+        logger.error(f'Encountered an error when creating a table movie: %s', e)
+
 
 
 

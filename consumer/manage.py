@@ -26,8 +26,8 @@ def parse_args():
     runserver_parser.add_argument('-a', '--address', default='0.0.0.0', dest='host', type=str)
     runserver_parser.add_argument('-p', '--port', default=8000, dest='port', type=int)
 
-    init_cassandra = subparser.add_parser('init_cassandra')
-    init_postgres = subparser.add_parser('init_postgres')
+    subparser.add_parser('init_cassandra')
+    subparser.add_parser('init_postgres')
 
     return parser.parse_args(sys.argv[1:])
 
