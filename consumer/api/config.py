@@ -12,7 +12,7 @@ if not docker:
         'KAFKA_SERVER': 'localhost:9092',
 
         'OFFSET_STORAGE': 'ZOOKEEPER',
-        'DATA_STORAGE': 'CASSANDRA',
+        'DATA_STORAGE': 'POSTGRES',
 
         'ZOOKEEPER_HOST': 'localhost',
         'ZOOKEEPER_PORT': 2181,
@@ -30,10 +30,10 @@ else:
         'DATABASE_PASSWORD': 'admin',
         'DATABASE_NAME': 'movies',
 
-        'KAFKA_SERVERS': ['kafka:9092'],
+        'KAFKA_SERVERS': 'kafka:9092',
 
         'OFFSET_STORAGE': 'ZOOKEEPER',
-        'DATA_STORAGE': 'CASSANDRA',
+        'DATA_STORAGE': 'POSTGRES',
 
         'ZOOKEEPER_HOST': 'zookeeper',
         'ZOOKEEPER_PORT': 2181,

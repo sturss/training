@@ -2,6 +2,8 @@ import asyncio
 
 from aiokafka import AIOKafkaConsumer, TopicPartition
 from api.config import Configs
+from api.app import logger
+
 
 if Configs['DATA_STORAGE'] == 'POSTGRES':
     from api.api_routes.services.postgres_data import insert_movie
@@ -29,20 +31,28 @@ class Consumer:
 
     @classmethod
     async def get_last_offset(cls):
-        return TopicPartition('movies', 0), OffsetStorage.get_value('offset')
+        return TopicPartition('movie', 0), OffsetStorage.get_value('offset')
 
     @classmethod
     async def init(cls):
         OffsetStorage.ensure_record('offset', value=0)
         loop = asyncio.get_event_loop()
-        cls.consumer = AIOKafkaConsumer('movies',
+        cls.consumer = AIOKafkaConsumer('movie',
                                         bootstrap_servers=Configs['KAFKA_SERVERS'],
                                         loop=loop,
                                         auto_offset_reset='earliest',
                                         enable_auto_commit=False,
                                         consumer_timeout_ms=3000
                                         )
-        await cls.consumer.start()
+
+        while True:
+            try:
+                await cls.consumer.start()
+                break
+            except Exception as e:
+                logger.critical(e)
+                await asyncio.sleep(5)
+
         cls.consumer.seek(*await cls.get_last_offset())
 
     @classmethod

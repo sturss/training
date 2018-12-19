@@ -5,6 +5,7 @@ import sys
 from api.app import app
 
 
+# TODO
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', type=bool, default=False)
