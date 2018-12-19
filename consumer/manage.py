@@ -12,7 +12,7 @@ def parse_args():
     parser.add_argument('--postgres_password', dest='postgres_password', type=str)
     parser.add_argument('--postgres_database', dest='postgres_database', type=str)
     parser.add_argument('--postgres_address', dest='postgres_address', type=str)
-    parser.add_argument('--kafka-bootstrap', dest='kafka_server', type=str)
+    parser.add_argument('--kafka-bootstrap', dest='kafka_servers', type=str)
     parser.add_argument('--offset-storage', dest='offset_storage', type=str)
     parser.add_argument('--data-storage', dest='data_storage', type=str)
     parser.add_argument('--zookeeper-host', dest='zookeeper_host', type=str)

@@ -7,7 +7,7 @@ from sanic.response import json, json_dumps
 from sanic.views import HTTPMethodView
 
 from api.api_routes.services.kafka import producer
-from api.app import logger
+from api.logger import logger
 
 
 class Message(HTTPMethodView):
