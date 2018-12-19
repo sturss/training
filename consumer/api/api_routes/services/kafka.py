@@ -3,6 +3,7 @@ import asyncio
 from aiokafka import AIOKafkaConsumer, TopicPartition
 from api.config import Configs
 from api.app import logger
+from api.forms import MovieForm
 
 
 if Configs['DATA_STORAGE'] == 'POSTGRES':
@@ -15,8 +16,6 @@ if Configs['OFFSET_STORAGE'] == 'ZOOKEEPER':
     from api.api_routes.services.zookeeper import ZookeeperManager as OffsetStorage
 else:
     from api.api_routes.services.redis import RedisManager as OffsetStorage
-
-from api.forms import MovieForm
 
 
 class Consumer:
