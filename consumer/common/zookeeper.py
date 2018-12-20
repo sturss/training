@@ -13,14 +13,18 @@ class ZookeeperManager:
     connection.start()
 
     @classmethod
+    def exists(cls, node):
+        return cls.connection.exists(node)
+
+    @classmethod
     def ensure_record(cls, node, value=0):
-        if not cls.connection.exists(node):
-            cls.connection.create(node)
-            cls.connection.set(node, str(value).encode('utf-8'))
-            logger.info("Zookeeper node %s didn't exist, node has been created", node)
-        if not cls.connection.exists(f'{node}/data_type'):
-            cls.connection.create(f'{node}/data_type')
-            cls.connection.set(f'{node}/data_type', b'int')
+        if cls.exists(node):
+            return
+
+        cls.connection.create(node)
+        cls.connection.create(f'{node}/data_type')
+        logger.info("Zookeeper node %s didn't exist, node has been created", node)
+        cls.set_value(node, value)
 
     @classmethod
     def get_value(cls, node):
@@ -38,9 +42,11 @@ class ZookeeperManager:
     @classmethod
     def set_value(cls, node, value):
         data_type = type(value).__name__
-        cls.ensure_record(node)
-        cls.connection.set(node, str(value).encode('utf-8'))
-        cls.connection.set(f'{node}/data_type', str(data_type).encode('utf-8'))
+        if not cls.exists(node):
+            cls.ensure_record(node, value)
+        else:
+            cls.connection.set(node, str(value).encode('utf-8'))
+            cls.connection.set(f'{node}/data_type', str(data_type).encode('utf-8'))
 
     @classmethod
     def close(cls):
