@@ -1,3 +1,7 @@
+"""
+    Module with application endpoints for /movies namespace
+"""
+
 from http import HTTPStatus
 
 from sanic.request import Request

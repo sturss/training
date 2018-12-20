@@ -1,3 +1,7 @@
+"""
+    Module with helping functions for api to retrieve data from Postgres database
+"""
+
 from aiopg.sa import create_engine
 
 from api.config import Configs
