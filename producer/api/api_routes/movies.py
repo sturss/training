@@ -1,3 +1,7 @@
+"""
+    Module with application endpoints for /movies namespace
+"""
+
 import datetime
 import json
 from http import HTTPStatus

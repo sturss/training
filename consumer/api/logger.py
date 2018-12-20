@@ -1,3 +1,6 @@
+"""
+    Module which creates and configures logger
+"""
 import logging
 
 

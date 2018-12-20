@@ -1,3 +1,6 @@
+"""
+    Module with all functionality related to Redis
+"""
 
 from kazoo.client import KazooClient
 from api.config import Configs

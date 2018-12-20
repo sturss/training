@@ -1,3 +1,7 @@
+"""
+    Module with all functionality related to Kafka
+"""
+
 import asyncio
 
 from aiokafka import AIOKafkaConsumer, TopicPartition
@@ -13,12 +17,17 @@ else:
 
 
 if Configs['OFFSET_STORAGE'] == 'ZOOKEEPER':
-    from api.api_routes.services.zookeeper import ZookeeperManager as OffsetStorage
+    from common.zookeeper import ZookeeperManager as OffsetStorage
 else:
-    from api.api_routes.services.redis import RedisManager as OffsetStorage
+    from common.redis import RedisManager as OffsetStorage
 
 
 class Consumer:
+    """
+    Class for Consuming data from Kafka broker
+    Works with topic movie
+    Commits offset to Kafka every 10 seconds or on a new message
+    """
     consumer: AIOKafkaConsumer = None
 
     @classmethod
