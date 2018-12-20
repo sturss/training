@@ -3,7 +3,7 @@
 """
 from sanic import Sanic
 
-from api.api_routes.services.kafka import Consumer
+from common.kafka import Consumer
 from api.api_routes import bp
 
 app = Sanic(__name__)

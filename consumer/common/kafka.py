@@ -7,14 +7,6 @@ import asyncio
 from aiokafka import AIOKafkaConsumer, TopicPartition
 from api.config import Configs
 from api.logger import logger
-from api.forms import MovieForm
-
-
-if Configs['DATA_STORAGE'] == 'POSTGRES':
-    from api.api_routes.services.postgres_data import insert_movie
-else:
-    from api.api_routes.services.cassandra_data import insert_movie
-
 
 if Configs['OFFSET_STORAGE'] == 'ZOOKEEPER':
     from common.zookeeper import ZookeeperManager as OffsetStorage
@@ -29,9 +21,22 @@ class Consumer:
     Commits offset to Kafka every 10 seconds or on a new message
     """
     consumer: AIOKafkaConsumer = None
+    listeners = set()
 
     @classmethod
-    async def read_messages(cls):
+    def add_listener(cls, listener):
+        cls.listeners.add(listener)
+
+    @classmethod
+    def remove_listener(cls, listener):
+        cls.listeners.remove(listener)
+
+    @classmethod
+    async def read_messages(cls, on_message=()):
+        if callable(on_message):
+            cls.listeners.add(on_message)
+        else:
+            cls.listeners.union(on_message)
         try:
             await Consumer._listen()
         finally:
@@ -47,6 +52,7 @@ class Consumer:
 
     @classmethod
     async def _init(cls):
+        print(cls.listeners)
         OffsetStorage.ensure_record('offset', value=0)
         OffsetStorage.ensure_record('offset_counter', value=0)
         loop = asyncio.get_event_loop()
@@ -84,20 +90,20 @@ class Consumer:
 
                 OffsetStorage.set_value('offset', OffsetStorage.get_value('offset')+1)
 
-                counter = (OffsetStorage.get_value('offset_counter')+1) % 11
+                counter = (OffsetStorage.get_value('offset_counter')+1) % 10
                 OffsetStorage.set_value('offset_counter', counter)
 
-                if counter == 10:
+                if counter == 9:
                     cls.consumer.commit()
                     logger.info("Consumer received 10th message, commit has been performed")
 
                 cls.consumer.seek(TopicPartition(message.topic, message.partition), message.offset+1)
+                for listener in cls.listeners:
+                    try:
+                        listener(message)
+                    except Exception as e:
+                        logger.error("Error occurred in Consumer callback function: %s", e)
 
-                data, errors = MovieForm().loads(message.value)
-                if errors:
-                    logger.error("Consumer received message with incorrect format %s", data)
-                else:
-                    await insert_movie(data)
             except Exception as e:
                 logger.critical("Unexpected error, wait for 2sec: %s", e)
                 if not cls.consumer:
