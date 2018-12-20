@@ -1,3 +1,6 @@
+"""
+    Module with initializing Sanic application
+"""
 from sanic import Sanic
 
 app = Sanic(__name__)

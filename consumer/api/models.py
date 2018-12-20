@@ -1,3 +1,7 @@
+"""
+    Module with models for postgres database
+"""
+
 import uuid
 from datetime import datetime
 

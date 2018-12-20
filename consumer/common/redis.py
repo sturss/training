@@ -1,3 +1,7 @@
+"""
+    Module with all functionality related to Redis
+"""
+
 import redis as rd
 
 from api.config import Configs

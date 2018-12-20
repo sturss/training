@@ -1,7 +1,9 @@
+"""
+    Module with application configurations
+"""
 import os
 
 docker = os.environ.get('DOCKER', None)
-
 
 Configs = {
     'POSTGRES_USER': os.environ.get('POSTGRES_USER') or 'admin',

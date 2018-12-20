@@ -1,3 +1,7 @@
+"""
+    Module with helping functions for api to retrieve data from Cassandra database
+"""
+
 import uuid
 
 from cassandra.cluster import Cluster

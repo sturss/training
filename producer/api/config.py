@@ -1,3 +1,7 @@
+"""
+    Module with application configurations
+"""
+
 import os
 
 docker = os.environ.get('DOCKER', None)

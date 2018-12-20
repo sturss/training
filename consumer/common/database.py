@@ -5,6 +5,10 @@ from api.logger import logger
 
 
 async def init_postgres():
+    """
+    Creates all tables that are represented by models in a Postgres database
+    :return: None
+    """
     from aiopg.sa import create_engine
     from sqlalchemy.sql.ddl import CreateTable
 
@@ -23,8 +27,11 @@ async def init_postgres():
                     logger.error(f'Encountered an error when creating a table %s: %s', model.name, e)
 
 
-
 async def init_cassandra():
+    """
+    Creates 'movie' table in Cassandra keyspace and if there is no keyspace, it's also created
+    :return: None
+    """
     from cassandra.cluster import Cluster
 
     cluster = Cluster([Configs['CASSANDRA_HOST']])

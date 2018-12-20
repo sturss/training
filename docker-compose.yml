@@ -31,7 +31,7 @@ services:
     volumes:
       - ./producer:/producer
     ports:
-      - 5500:5500
+      - 5000:5000
     depends_on:
       - postgres
       - kafka
