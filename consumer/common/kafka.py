@@ -3,6 +3,7 @@
 """
 
 import asyncio
+import time
 
 from aiokafka import AIOKafkaConsumer, TopicPartition
 from api.config import Configs
@@ -22,6 +23,7 @@ class Consumer:
     """
     consumer: AIOKafkaConsumer = None
     listeners = set()
+    last_commit_time = None
 
     @classmethod
     def add_listener(cls, listener):
@@ -52,7 +54,6 @@ class Consumer:
 
     @classmethod
     async def _init(cls):
-        print(cls.listeners)
         OffsetStorage.ensure_record('offset', value=0)
         OffsetStorage.ensure_record('offset_counter', value=0)
         loop = asyncio.get_event_loop()
@@ -77,9 +78,17 @@ class Consumer:
 
     @classmethod
     async def _interval_commit(cls):
+        if cls.last_commit_time is None:
+            cls.last_commit_time = time.time()
         while True:
+            passed_time = time.time() - cls.last_commit_time
+            if passed_time < 10:
+                await asyncio.sleep(10-passed_time)
+                if time.time() - cls.last_commit_time < 10:
+                    continue
             cls.consumer.commit()
-            await asyncio.sleep(10)
+            cls.last_commit_time = time.time()
+            logger.critical("COMMIT")
 
     @classmethod
     async def _listen(cls):
@@ -88,21 +97,23 @@ class Consumer:
             try:
                 message = await cls.consumer.getone()
 
-                OffsetStorage.set_value('offset', OffsetStorage.get_value('offset')+1)
-
-                counter = (OffsetStorage.get_value('offset_counter')+1) % 10
-                OffsetStorage.set_value('offset_counter', counter)
-
-                if counter == 9:
-                    cls.consumer.commit()
-                    logger.info("Consumer received 10th message, commit has been performed")
-
-                cls.consumer.seek(TopicPartition(message.topic, message.partition), message.offset+1)
                 for listener in cls.listeners:
                     try:
                         listener(message)
                     except Exception as e:
                         logger.error("Error occurred in Consumer callback function: %s", e)
+
+                OffsetStorage.set_value('offset', OffsetStorage.get_value('offset') + 1)
+
+                counter = (OffsetStorage.get_value('offset_counter') + 1) % 10
+                OffsetStorage.set_value('offset_counter', counter)
+
+                if counter == 9:
+                    cls.consumer.commit()
+                    cls.last_commit_time = time.time()
+                    logger.info("Consumer received 10th message, commit has been performed")
+
+                cls.consumer.seek(TopicPartition(message.topic, message.partition), message.offset + 1)
 
             except Exception as e:
                 logger.critical("Unexpected error, wait for 2sec: %s", e)
