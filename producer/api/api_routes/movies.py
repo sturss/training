@@ -2,7 +2,6 @@
     Module with application endpoints for /movies namespace
 """
 
-import datetime
 import json
 from http import HTTPStatus
 
@@ -15,12 +14,11 @@ from api.logger import logger
 
 
 class Message(HTTPMethodView):
-    async def get(self, request: Request):
-        message = json_dumps({'title': 'New Movie 1',
-                              'release_date': datetime.datetime.utcnow().isoformat()})
-        try:
-            producer.send('movie', message.encode('utf-8'))
-        except Exception as e:
-            logger.critical(e)
-        logger.critical("Message %s has been successfully sent to topic movies", message)
+    async def post(self, request: Request):
+        title = request.json.get('title')
+        release_date = request.json.get('release_date')
+        message = json_dumps({'title': title,
+                              'release_date': release_date})
+        producer.send('movie', message.encode('utf-8'))
+        logger.info("Message %s has been successfully sent to topic movies", message)
         return json({}, HTTPStatus.OK)

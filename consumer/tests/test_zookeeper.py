@@ -32,9 +32,9 @@ class TestZookeeperManager(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        ZookeeperManager.connection.delete('test_key', recursive=True)
-        ZookeeperManager.connection.delete('new_test_key', recursive=True)
-        ZookeeperManager.connection.delete('non_existent_test_key', recursive=True)
+        ZookeeperManager.remove('test_key')
+        ZookeeperManager.remove('new_test_key')
+        ZookeeperManager.remove('non_existent_test_key')
 
 
 if __name__ == '__main__':

@@ -61,7 +61,6 @@ class Consumer:
                                         group_id="movie_1",
                                         bootstrap_servers=Configs['KAFKA_SERVERS'],
                                         loop=loop,
-                                        auto_offset_reset='earliest',
                                         enable_auto_commit=False,
                                         consumer_timeout_ms=3000
                                         )
@@ -88,8 +87,8 @@ class Consumer:
                 if time.time() - cls.last_commit_time < 10:
                     continue
             await cls.consumer.commit()
+            logger.info("Planned interval commit")
             cls.last_commit_time = time.time()
-            logger.critical("COMMIT")
 
     @classmethod
     async def _listen(cls):
@@ -97,7 +96,6 @@ class Consumer:
         while True:
             try:
                 message = await cls.consumer.getone()
-
                 for listener in cls.listeners:
                     try:
                         listener(message)
