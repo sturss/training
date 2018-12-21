@@ -5,7 +5,7 @@
 from aiopg.sa import create_engine
 
 from api.config import Configs
-from api.models import Movie
+from api.pg_models import Movie
 
 
 async def insert_movie(movie):
@@ -20,7 +20,7 @@ async def insert_movie(movie):
                 await conn.execute(Movie.insert().values(movie))
 
 
-async def get_movies():
+async def get_movies_count():
     async with create_engine(
         user=Configs['POSTGRES_USER'],
         database=Configs['POSTGRES_DATABASE'],
