@@ -22,6 +22,8 @@ class Consumer:
     Commits offset to Kafka every 10 seconds or on a new message
     """
     consumer: AIOKafkaConsumer = None
+    _reader_task: asyncio.Task = None
+    _commit_task: asyncio.Task = None
     listeners = set()
     last_commit_time = None
 
@@ -34,15 +36,23 @@ class Consumer:
         cls.listeners.remove(listener)
 
     @classmethod
-    async def read_messages(cls, on_message=()):
+    async def connect(cls, on_message=()):
         if callable(on_message):
             cls.listeners.add(on_message)
         else:
-            cls.listeners.union(on_message)
+            cls.listeners = cls.listeners.union(on_message)
+        cls._reader_task = asyncio.ensure_future(Consumer._listen())
+
+    @classmethod
+    async def close(cls):
         try:
-            await Consumer._listen()
+            cls._commit_task.cancel()
+            cls._reader_task.cancel()
+        except Exception as e:
+            logger.error("Error occurred while trying to close connection with Kafka: %s", e)
         finally:
-            await Consumer.stop()
+            if cls.consumer is not None:
+                await cls.consumer.stop()
 
     @classmethod
     async def _get_message_counter(cls):
@@ -56,11 +66,10 @@ class Consumer:
     async def _init(cls):
         OffsetStorage.ensure_record('offset', value=0)
         OffsetStorage.ensure_record('offset_counter', value=0)
-        loop = asyncio.get_event_loop()
         cls.consumer = AIOKafkaConsumer('movie',
                                         group_id="movie_1",
                                         bootstrap_servers=Configs['KAFKA_SERVERS'],
-                                        loop=loop,
+                                        loop=asyncio.get_event_loop(),
                                         enable_auto_commit=False,
                                         consumer_timeout_ms=3000
                                         )
@@ -68,11 +77,11 @@ class Consumer:
             try:
                 await cls.consumer.start()
                 logger.info("Connection with Kafka broker successfully established")
-                asyncio.ensure_future(cls._interval_commit())
+                cls._commit_task = asyncio.ensure_future(cls._interval_commit())
                 break
             except Exception as e:
-                logger.error("Couldn't connect to Kafka broker because of %s, try again in 5sec", e)
-                await asyncio.sleep(5)
+                logger.error("Couldn't connect to Kafka broker because of %s, try again in 3 seconds", e)
+                await asyncio.sleep(3)
 
         cls.consumer.seek(*await cls._get_last_offset())
 
@@ -112,14 +121,9 @@ class Consumer:
                     cls.last_commit_time = time.time()
                     logger.info("Consumer received 10th message, commit has been performed")
 
-                cls.consumer.seek(TopicPartition(message.topic, message.partition), message.offset + 1)
-
             except Exception as e:
                 logger.critical("Unexpected error, wait for 2sec: %s", e)
                 if not cls.consumer:
+                    logger.critical("Connection with Kafka lost, try to reconnect")
                     await cls._init()
                 await asyncio.sleep(2)
-
-    @classmethod
-    async def stop(cls):
-        await cls.consumer.stop()

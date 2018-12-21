@@ -8,9 +8,14 @@ from api.logger import logger
 
 
 class ZookeeperManager:
-    logger.info("Establishing connection with Zookeeper: %s:%s", Configs['ZOOKEEPER_HOST'], Configs['ZOOKEEPER_PORT'])
-    connection = KazooClient(hosts=f"{Configs['ZOOKEEPER_HOST']}:{Configs['ZOOKEEPER_PORT']}")
-    connection.start()
+    connection: KazooClient = None
+
+    @classmethod
+    def connect(cls):
+        logger.info("Establishing connection with Zookeeper: %s:%s", Configs['ZOOKEEPER_HOST'],
+                    Configs['ZOOKEEPER_PORT'])
+        cls.connection = KazooClient(hosts=f"{Configs['ZOOKEEPER_HOST']}:{Configs['ZOOKEEPER_PORT']}")
+        cls.connection.start()
 
     @classmethod
     def exists(cls, node):
@@ -50,8 +55,9 @@ class ZookeeperManager:
 
     @classmethod
     def close(cls):
-        cls.connection.close()
         logger.info('Closing connection with zookeeper')
+        cls.connection.stop()
+        cls.connection.close()
 
     @classmethod
     def remove(cls, node):
