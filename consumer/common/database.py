@@ -57,6 +57,9 @@ async def init_cassandra():
     except Exception as e:
         logger.error(f'Encountered an error when creating a table movie: %s', e)
 
+    session.shutdown()
+    cluster.shutdown()
+
 
 
 

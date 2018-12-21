@@ -9,8 +9,16 @@ from api.logger import logger
 
 
 class RedisManager:
-    logger.info("Establishing connection with Redis: %s:%s", Configs['REDIS_HOST'], Configs['REDIS_PORT'])
-    connection = rd.StrictRedis(host=Configs['REDIS_HOST'], port=Configs['REDIS_PORT'])
+    connection: rd.StrictRedis = None
+
+    @classmethod
+    def connect(cls):
+        logger.info("Establishing connection with Redis: %s:%s", Configs['REDIS_HOST'], Configs['REDIS_PORT'])
+        cls.connection = rd.StrictRedis(host=Configs['REDIS_HOST'], port=Configs['REDIS_PORT'])
+
+    @classmethod
+    def close(cls):
+        del cls.connection
 
     @classmethod
     def ensure_record(cls, key, value=0):
