@@ -58,6 +58,7 @@ class Consumer:
         OffsetStorage.ensure_record('offset_counter', value=0)
         loop = asyncio.get_event_loop()
         cls.consumer = AIOKafkaConsumer('movie',
+                                        group_id="movie_1",
                                         bootstrap_servers=Configs['KAFKA_SERVERS'],
                                         loop=loop,
                                         auto_offset_reset='earliest',
@@ -86,7 +87,7 @@ class Consumer:
                 await asyncio.sleep(10-passed_time)
                 if time.time() - cls.last_commit_time < 10:
                     continue
-            cls.consumer.commit()
+            await cls.consumer.commit()
             cls.last_commit_time = time.time()
             logger.critical("COMMIT")
 
@@ -109,7 +110,7 @@ class Consumer:
                 OffsetStorage.set_value('offset_counter', counter)
 
                 if counter == 9:
-                    cls.consumer.commit()
+                    await cls.consumer.commit()
                     cls.last_commit_time = time.time()
                     logger.info("Consumer received 10th message, commit has been performed")
 
