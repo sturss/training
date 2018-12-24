@@ -24,7 +24,8 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--address', default='0.0.0.0', dest='host', type=str)
     parser.add_argument('-p', '--port', default=5000, dest='port', type=int)
-    parser.add_argument('--kafka-bootstrap', dest='kafka_servers', type=str)
+    parser.add_argument('--kafka-address', dest='kafka_address', type=str)
+    parser.add_argument('--kafka-port', dest='kafka_port', type=int)
 
     return parser.parse_args(sys.argv[1:])
 

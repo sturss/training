@@ -68,7 +68,7 @@ class Consumer:
         OffsetStorage.ensure_record('offset_counter', value=0)
         cls.consumer = AIOKafkaConsumer('movie',
                                         group_id="movie_1",
-                                        bootstrap_servers=Configs['KAFKA_SERVERS'],
+                                        bootstrap_servers=f"{Configs['KAFKA_ADDRESS']}:{Configs['KAFKA_PORT']}",
                                         loop=asyncio.get_event_loop(),
                                         enable_auto_commit=False,
                                         consumer_timeout_ms=3000
