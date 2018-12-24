@@ -24,6 +24,7 @@ class Consumer:
     consumer: AIOKafkaConsumer = None
     _reader_task: asyncio.Task = None
     _commit_task: asyncio.Task = None
+    _uncommitted_messages = 0
     listeners = set()
     last_commit_time = None
 
@@ -41,7 +42,7 @@ class Consumer:
             cls.listeners.add(on_message)
         else:
             cls.listeners = cls.listeners.union(on_message)
-        cls._reader_task = asyncio.ensure_future(Consumer._listen())
+        cls._reader_task = asyncio.ensure_future(cls._listen())
 
     @classmethod
     async def close(cls):
@@ -95,8 +96,10 @@ class Consumer:
                 await asyncio.sleep(10-passed_time)
                 if time.time() - cls.last_commit_time < 10:
                     continue
-            await cls.consumer.commit()
-            logger.info("Planned interval commit")
+            if cls._uncommitted_messages > 0:
+                await cls.consumer.commit()
+                logger.info("Planned interval commit")
+                cls._uncommitted_messages = 0
             cls.last_commit_time = time.time()
 
     @classmethod
@@ -105,6 +108,7 @@ class Consumer:
         while True:
             try:
                 message = await cls.consumer.getone()
+                cls._uncommitted_messages += 1
                 for listener in cls.listeners:
                     try:
                         listener(message)
@@ -119,6 +123,7 @@ class Consumer:
                 if counter == 9:
                     await cls.consumer.commit()
                     cls.last_commit_time = time.time()
+                    cls._uncommitted_messages = 0
                     logger.info("Consumer received 10th message, commit has been performed")
 
             except Exception as e:
