@@ -14,7 +14,7 @@ Configs = {
     'ZOOKEEPER_PORT': os.environ.get('ZOOKEEPER_PORT') or 2181,
     'REDIS_PORT': os.environ.get('REDIS_PORT') or 6379,
     'OFFSET_STORAGE': os.environ.get('OFFSET_STORAGE') or 'REDIS',
-    'DATA_STORAGE': os.environ.get('DATA_STORAGE') or 'POSTGRES',
+    'DATA_STORAGE': os.environ.get('DATA_STORAGE') or 'CASSANDRA',
     'CASSANDRA_KEYSPACE': os.environ.get('CASSANDRA_KEYSPACE') or 'movies',
 }
 
