@@ -3,6 +3,7 @@ aiohttp==3.4.4
 aiokafka==0.4.3
 aiopg==0.15.0
 aioredis==1.2.0
+aiozk==0.10.0
 async-timeout==3.0.1
 attrs==18.2.0
 cassandra-driver==3.16.0
@@ -12,7 +13,6 @@ httptools==0.0.11
 idna==2.8
 idna-ssl==1.1.0
 kafka-python==1.4.3
-kazoo==2.6.0
 marshmallow==2.16.3
 multidict==4.5.2
 psycopg2==2.7.6.1
