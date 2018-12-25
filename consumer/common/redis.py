@@ -11,16 +11,29 @@ from common.connection import Connection
 
 
 class RedisManager:
+    """
+        Class which encapsulates all necessary operations for working with Redis
+        if provided methods are not sufficient, Redis.connection may be used
+        for direct access
+    """
     connection: rd.Redis = None
 
     @classmethod
     async def connect(cls):
+        """
+        Creates Redis object with given in configurations host and initiates connection
+        :return: None
+        """
         logger.info("Establishing connection with Redis: %s:%s", Configs['REDIS_HOST'], Configs['REDIS_PORT'])
         cls.connection = await rd.create_redis(f"redis://{Configs['REDIS_HOST']}:{Configs['REDIS_PORT']}",
                                                loop=asyncio.get_event_loop())
 
     @classmethod
     async def close(cls):
+        """
+        Closes connection with Redis if established and sets connection object to None
+        :return: None
+        """
         if cls.connection:
             logger.info("Closing connection with Redis: %s:%s", Configs['REDIS_HOST'], Configs['REDIS_PORT'])
             cls.connection.close()
@@ -30,12 +43,23 @@ class RedisManager:
     @classmethod
     @Connection.check_connection
     async def ensure_record(cls, key, value=0):
+        """
+        Checks if given node exists. If exists return, else creates node and sets value to 0 or a given
+        :param key: str
+        :param value: value to set the key
+        :return: None
+        """
         if not await cls.connection.exists(key):
             await cls.set_value(key, value)
 
     @classmethod
     @Connection.check_connection
     async def get_value(cls, key):
+        """
+        Returns value of the node with basic data types casting.
+        :param key: str
+        :return: str, int , or float - value placed in the given node
+        """
         await cls.ensure_record(key)
         value = (await cls.connection.lindex(key, 0)).decode('utf-8')
         data_type = (await cls.connection.lindex(key, 1)).decode('utf-8')
@@ -50,6 +74,12 @@ class RedisManager:
     @classmethod
     @Connection.check_connection
     async def set_value(cls, key, value):
+        """
+        Checks data type of a given value and stores both value and data type in a list
+        :param key: str
+        :param value: str or any other data type which will be casted to str
+        :return: None
+        """
         data_type = type(value).__name__
         if await cls.connection.exists(key):
             await cls.connection.delete(key)

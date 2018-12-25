@@ -33,7 +33,6 @@ def parse_args():
     parser.add_argument('--kafka-commit-seconds-interval', dest='kafka_commit_seconds_interval', type=int)
     parser.add_argument('--kafka-commit-messages-interval', dest='kafka_commit_messages_interval', type=int)
 
-
     # parameters given after runserver command e.g.: python manage.py runserver -a=0.0.0.0 -p=5000
     runserver_parser = subparser.add_parser('runserver')
     runserver_parser.add_argument('-a', '--address', default='0.0.0.0', dest='host', type=str)
