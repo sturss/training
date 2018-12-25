@@ -14,7 +14,6 @@ connection.setup([Configs['CASSANDRA_HOST']], default_keyspace=Configs['CASSANDR
 
 async def insert_movie(movie):
     try:
-        logger.critical(movie)
         insert_query = f"""
                 INSERT INTO {Configs['CASSANDRA_KEYSPACE']}."movie" (id, title, release_date) 
                 VALUES (%s, %s, %s)

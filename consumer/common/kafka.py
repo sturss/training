@@ -39,9 +39,9 @@ class Consumer:
     @classmethod
     async def connect(cls, on_message=()):
         if callable(on_message):
-            cls.listeners.add(on_message)
+            cls._listeners.add(on_message)
         else:
-            cls.listeners = cls.listeners.union(on_message)
+            cls._listeners = cls._listeners.union(on_message)
         cls._reader_task = asyncio.ensure_future(cls._listen())
 
     @classmethod
@@ -88,10 +88,10 @@ class Consumer:
         if cls._last_commit_time is None:
             cls._last_commit_time = time.time()
         while True:
-            passed_time = time.time() - cls.last_commit_time
+            passed_time = time.time() - cls._last_commit_time
             if passed_time < 10:
                 await asyncio.sleep(10-passed_time)
-                if time.time() - cls.last_commit_time < 10:
+                if time.time() - cls._last_commit_time < 10:
                     continue
             if cls._uncommitted_messages > 0:
                 await cls._consumer.commit()
