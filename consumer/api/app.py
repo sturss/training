@@ -15,12 +15,12 @@ app.blueprint(bp)
 @app.listener("before_server_start")
 async def before_start(app, loop):
     ZookeeperManager.connect()
-    RedisManager.connect()
+    await RedisManager.connect()
     await Consumer.connect()
 
 
 @app.listener("after_server_stop")
 async def after_stop(app, loop):
     ZookeeperManager.close()
-    RedisManager.close()
+    await RedisManager.close()
     await Consumer.close()
