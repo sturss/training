@@ -1,10 +1,12 @@
 """
-    Module with all functionality related to Redis
+    Module with all functionality related to Zookeeper
 """
 
 from aiozk import ZKClient
 from api.config import Configs
 from api.logger import logger
+
+from common.connection import Connection
 
 
 class ZookeeperManager:
@@ -18,10 +20,19 @@ class ZookeeperManager:
         await cls.connection.start()
 
     @classmethod
+    async def close(cls):
+        if cls.connection:
+            logger.info('Closing connection with zookeeper')
+            await cls.connection.close()
+            cls.connection = None
+
+    @classmethod
+    @Connection.check_connection
     async def exists(cls, node):
         return await cls.connection.exists(node)
 
     @classmethod
+    @Connection.check_connection
     async def ensure_record(cls, node, value=0):
         if await cls.exists(node):
             return
@@ -32,6 +43,7 @@ class ZookeeperManager:
         await cls.set_value(node, value)
 
     @classmethod
+    @Connection.check_connection
     async def get_value(cls, node):
         await cls.ensure_record(node)
         value = (await cls.connection.get_data(node)).decode('utf-8')
@@ -45,6 +57,7 @@ class ZookeeperManager:
         return value
 
     @classmethod
+    @Connection.check_connection
     async def set_value(cls, node, value):
         data_type = type(value).__name__
         if not await cls.exists(node):
@@ -54,11 +67,7 @@ class ZookeeperManager:
             await cls.connection.set_data(f'{node}/data_type', str(data_type).encode('utf-8'))
 
     @classmethod
-    async def close(cls):
-        logger.info('Closing connection with zookeeper')
-        await cls.connection.close()
-
-    @classmethod
+    @Connection.check_connection
     async def remove(cls, node):
         await cls.connection.delete(node)
 
