@@ -28,8 +28,11 @@ def parse_args():
     parser.add_argument('--zookeeper-port', dest='zookeeper_port', type=int)
     parser.add_argument('--redis-host', dest='redis_host', type=str)
     parser.add_argument('--redis-port', dest='redis_port', type=int)
-    parser.add_argument('--cassandra_host', dest='cassandra-host', type=str)
-    parser.add_argument('--cassandra_keyspace', dest='cassandra-keyspace', type=str)
+    parser.add_argument('--cassandra-host', dest='cassandra-host', type=str)
+    parser.add_argument('--cassandra-keyspace', dest='cassandra-keyspace', type=str)
+    parser.add_argument('--kafka-commit-seconds-interval', dest='kafka_commit_seconds_interval', type=int)
+    parser.add_argument('--kafka-commit-messages-interval', dest='kafka_commit_messages_interval', type=int)
+
 
     # parameters given after runserver command e.g.: python manage.py runserver -a=0.0.0.0 -p=5000
     runserver_parser = subparser.add_parser('runserver')

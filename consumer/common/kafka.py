@@ -89,9 +89,9 @@ class Consumer:
             cls._last_commit_time = time.time()
         while True:
             passed_time = time.time() - cls._last_commit_time
-            if passed_time < 10:
-                await asyncio.sleep(10-passed_time)
-                if time.time() - cls._last_commit_time < 10:
+            if passed_time < Configs['KAFKA_COMMIT_SECONDS_INTERVAL']:
+                await asyncio.sleep(Configs['KAFKA_COMMIT_SECONDS_INTERVAL']-passed_time)
+                if time.time() - cls._last_commit_time < Configs['KAFKA_COMMIT_SECONDS_INTERVAL']:
                     continue
             if cls._uncommitted_messages > 0:
                 await cls._consumer.commit()
@@ -102,6 +102,7 @@ class Consumer:
     @classmethod
     async def _listen(cls):
         await cls._init()
+        counter = await OffsetStorage.get_value('offset_counter')
         while True:
             try:
                 message = await cls._consumer.getone()
@@ -114,10 +115,11 @@ class Consumer:
 
                 await OffsetStorage.set_value('offset', await OffsetStorage.get_value('offset') + 1)
 
-                counter = (await OffsetStorage.get_value('offset_counter') + 1) % 10
+                counter = counter % Configs['KAFKA_COMMIT_MESSAGES_INTERVAL'] + 1
+
                 await OffsetStorage.set_value('offset_counter', counter)
 
-                if counter == 9:
+                if counter == Configs['KAFKA_COMMIT_SECONDS_INTERVAL']:
                     await cls._consumer.commit()
                     cls._last_commit_time = time.time()
                     cls._uncommitted_messages = 0
