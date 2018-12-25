@@ -7,6 +7,8 @@ import aioredis as rd
 from api.config import Configs
 from api.logger import logger
 
+from common.connection import Connection
+
 
 class RedisManager:
     connection: rd.Redis = None
@@ -26,11 +28,13 @@ class RedisManager:
             cls.connection = None
 
     @classmethod
+    @Connection.check_connection
     async def ensure_record(cls, key, value=0):
         if not await cls.connection.exists(key):
             await cls.set_value(key, value)
 
     @classmethod
+    @Connection.check_connection
     async def get_value(cls, key):
         await cls.ensure_record(key)
         value = (await cls.connection.lindex(key, 0)).decode('utf-8')
@@ -44,6 +48,7 @@ class RedisManager:
         return value
 
     @classmethod
+    @Connection.check_connection
     async def set_value(cls, key, value):
         data_type = type(value).__name__
         if await cls.connection.exists(key):
