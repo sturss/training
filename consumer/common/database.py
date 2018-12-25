@@ -1,5 +1,4 @@
 
-from api.models import models
 from api.config import Configs
 from api.logger import logger
 
@@ -11,6 +10,8 @@ async def init_postgres():
     """
     from aiopg.sa import create_engine
     from sqlalchemy.sql.ddl import CreateTable
+
+    from api.pg_models import models
 
     async with create_engine(
         user=Configs['POSTGRES_USER'],
@@ -32,30 +33,22 @@ async def init_cassandra():
     Creates 'movie' table in Cassandra keyspace and if there is no keyspace, it's also created
     :return: None
     """
-    from cassandra.cluster import Cluster
+    from cassandra.cqlengine import connection
+    from cassandra.cqlengine.management import sync_table, create_keyspace_simple
 
-    cluster = Cluster([Configs['CASSANDRA_HOST']])
-    session = cluster.connect()
+    from api.cass_models import models
+
+    connection.setup([Configs['CASSANDRA_HOST']], default_keyspace=Configs['CASSANDRA_KEYSPACE'])
     try:
-        session.execute(f"""
-            CREATE KEYSPACE {Configs['CASSANDRA_KEYSPACE']}
-            WITH replication={{'class': 'SimpleStrategy', 'replication_factor': 1 }}
-        """)
+        create_keyspace_simple(Configs['CASSANDRA_KEYSPACE'], replication_factor=1)
     except Exception as e:
         logger.error(f'Encountered an error when creating a keyspace %s: %s', Configs['CASSANDRA_KEYSPACE'], e)
 
-    try:
-        session.set_keyspace(Configs['CASSANDRA_KEYSPACE'])
-        session.execute(f"""
-            CREATE TABLE movie(
-                id UUID,
-                title text,
-                release_date date,
-                PRIMARY KEY (id)
-            )           
-        """)
-    except Exception as e:
-        logger.error(f'Encountered an error when creating a table movie: %s', e)
+    for model in models:
+        try:
+            sync_table(model)
+        except Exception as e:
+            logger.error(f'Encountered an error when creating a table movie: %s', e)
 
 
 

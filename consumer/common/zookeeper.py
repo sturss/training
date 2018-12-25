@@ -1,32 +1,53 @@
 """
-    Module with all functionality related to Redis
+    Module with all functionality related to Zookeeper
 """
 
-from kazoo.client import KazooClient
+from aiozk import ZKClient
 from api.config import Configs
 from api.logger import logger
 
+from common.connection import Connection
+
 
 class ZookeeperManager:
-    logger.info("Establishing connection with Zookeeper: %s:%s", Configs['ZOOKEEPER_HOST'], Configs['ZOOKEEPER_PORT'])
-    connection = KazooClient(hosts=f"{Configs['ZOOKEEPER_HOST']}:{Configs['ZOOKEEPER_PORT']}")
-    connection.start()
+    connection: ZKClient = None
 
     @classmethod
-    def ensure_record(cls, node, value=0):
-        if not cls.connection.exists(node):
-            cls.connection.create(node)
-            cls.connection.set(node, str(value).encode('utf-8'))
-            logger.info("Zookeeper node %s didn't exist, node has been created", node)
-        if not cls.connection.exists(f'{node}/data_type'):
-            cls.connection.create(f'{node}/data_type')
-            cls.connection.set(f'{node}/data_type', b'int')
+    async def connect(cls):
+        logger.info("Establishing connection with Zookeeper: %s:%s", Configs['ZOOKEEPER_HOST'],
+                    Configs['ZOOKEEPER_PORT'])
+        cls.connection = ZKClient(f"{Configs['ZOOKEEPER_HOST']}:{Configs['ZOOKEEPER_PORT']}")
+        await cls.connection.start()
 
     @classmethod
-    def get_value(cls, node):
-        cls.ensure_record(node)
-        value = cls.connection.get(node)[0].decode('utf-8')
-        data_type = cls.connection.get(f'{node}/data_type')[0].decode('utf-8')
+    async def close(cls):
+        if cls.connection:
+            logger.info('Closing connection with zookeeper')
+            await cls.connection.close()
+            cls.connection = None
+
+    @classmethod
+    @Connection.check_connection
+    async def exists(cls, node):
+        return await cls.connection.exists(node)
+
+    @classmethod
+    @Connection.check_connection
+    async def ensure_record(cls, node, value=0):
+        if await cls.exists(node):
+            return
+
+        await cls.connection.create(node)
+        await cls.connection.create(f'{node}/data_type')
+        logger.info("Zookeeper node %s didn't exist, node has been created", node)
+        await cls.set_value(node, value)
+
+    @classmethod
+    @Connection.check_connection
+    async def get_value(cls, node):
+        await cls.ensure_record(node)
+        value = (await cls.connection.get_data(node)).decode('utf-8')
+        data_type = (await cls.connection.get_data(f'{node}/data_type')).decode('utf-8')
 
         if data_type == 'int':
             value = int(value)
@@ -36,18 +57,17 @@ class ZookeeperManager:
         return value
 
     @classmethod
-    def set_value(cls, node, value):
+    @Connection.check_connection
+    async def set_value(cls, node, value):
         data_type = type(value).__name__
-        cls.ensure_record(node)
-        cls.connection.set(node, str(value).encode('utf-8'))
-        cls.connection.set(f'{node}/data_type', str(data_type).encode('utf-8'))
+        if not await cls.exists(node):
+            await cls.ensure_record(node, value)
+        else:
+            await cls.connection.set_data(node, str(value).encode('utf-8'))
+            await cls.connection.set_data(f'{node}/data_type', str(data_type).encode('utf-8'))
 
     @classmethod
-    def close(cls):
-        cls.connection.close()
-        logger.info('Closing connection with zookeeper')
-
-    @classmethod
-    def remove(cls, node):
-        cls.connection.delete(node, recursive=True)
+    @Connection.check_connection
+    async def remove(cls, node):
+        await cls.connection.deleteall(node)
 

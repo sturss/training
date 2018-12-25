@@ -9,19 +9,21 @@ Configs = {
     'POSTGRES_USER': os.environ.get('POSTGRES_USER') or 'admin',
     'POSTGRES_PASSWORD': os.environ.get('POSTGRES_PASSWORD') or 'admin',
     'POSTGRES_DATABASE': os.environ.get('POSTGRES_DATABASE') or 'movies',
-    'OFFSET_STORAGE': os.environ.get('OFFSET_STORAGE') or 'REDIS',
-    'DATA_STORAGE': os.environ.get('DATA_STORAGE') or 'POSTGRES',
+    'POSTGRES_PORT': os.environ.get('POSTGRES_PORT') or 5432,
+    'KAFKA_PORT': os.environ.get('KAFKA_PORT') or 9092,
     'ZOOKEEPER_PORT': os.environ.get('ZOOKEEPER_PORT') or 2181,
     'REDIS_PORT': os.environ.get('REDIS_PORT') or 6379,
+    'OFFSET_STORAGE': os.environ.get('OFFSET_STORAGE') or 'ZOOKEEPER',
+    'DATA_STORAGE': os.environ.get('DATA_STORAGE') or 'CASSANDRA',
     'CASSANDRA_KEYSPACE': os.environ.get('CASSANDRA_KEYSPACE') or 'movies',
-    'CASSANDRA_RETRIES': os.environ.get('CASSANDRA_RETRIES') or 3,
-    'CASSANDRA_RETRY_TIME': os.environ.get('CASSANDRA_RETRY_TIME') or 5
+    'KAFKA_COMMIT_SECONDS_INTERVAL': os.environ.get('KAFKA_COMMIT_INTERVAL') or 10,
+    'KAFKA_COMMIT_MESSAGES_INTERVAL': os.environ.get('KAFKA_COMMIT_MESSAGES_INTERVAL') or 10,
 }
 
 if not docker:
     Configs.update({
         'POSTGRES_ADDRESS': os.environ.get('POSTGRES_ADDRESS') or 'localhost',
-        'KAFKA_SERVERS': os.environ.get('KAFKA_SERVERS') or 'localhost:9092',
+        'KAFKA_ADDRESS': os.environ.get('KAFKA_SERVERS') or 'localhost',
         'ZOOKEEPER_HOST': os.environ.get('ZOOKEEPER_HOST') or 'localhost',
         'REDIS_HOST': os.environ.get('ZOOKEEPER_HOST') or 'localhost',
         'CASSANDRA_HOST': os.environ.get('CASSANDRA_HOST') or 'localhost',
@@ -30,7 +32,7 @@ if not docker:
 else:
     Configs.update({
         'POSTGRES_ADDRESS': os.environ.get('POSTGRES_ADDRESS') or 'postgres',
-        'KAFKA_SERVERS': os.environ.get('KAFKA_SERVERS') or 'kafka:9092',
+        'KAFKA_ADDRESS': os.environ.get('KAFKA_SERVERS') or 'kafka',
         'ZOOKEEPER_HOST': os.environ.get('ZOOKEEPER_HOST') or 'zookeeper',
         'REDIS_HOST': os.environ.get('REDIS_HOST') or 'redis',
         'CASSANDRA_HOST': os.environ.get('CASSANDRA_HOST') or 'cassandra',
