@@ -9,7 +9,7 @@ For starting application in Docker containers it's enough change directory to th
 ```
 
 <h2> 2. Applciation on host machine </h2>
-In application directory run command:
+In application (consumer/producer) directory run command:
 
 ```yaml
     python manage.py runserver -a=0.0.0.0 -p=8000
@@ -29,7 +29,8 @@ In application directory run command:
     * POSTGRES_USER: Username of database user (default admin)
     * POSTGRES_PASSWORD: Password of database user (default admin)
     * POSTGRES_DATABASE: Database which will be used (default movies)
-    * KAFKA_SERVER: Bootstrap server for Kafka (default localhost:9092)
+    * KAFKA_ADDRESS: IP-address of Kafka bootstrap (default localhost)
+    * KAFKA_PORT: Port of for Kafka bootstrap (default 9092)
     * OFFSET_STORAGE: Service for storing offset of the last accepted message (default REDIS, may be ZOOKEEPER)
     * DATA_STORAGE: Service for storing messages that came from Kafka (default POSTGRES, may be CASSANDRA)
     * ZOOKEEPER_HOST: Address of Zookeeper service (default localhost)
@@ -38,4 +39,6 @@ In application directory run command:
     * REDIS_PORT' Port of Redus service (default 6379)
     * CASSANDRA_HOST: Address of Cassandra service (default localhost)
     * CASSANDRA_KEYSPACE: Keyspace to use in Cassandra (default movies) <br>
+    * KAFKA_COMMIT_SECONDS_INTERVAL: Interval in seconds for kafka commit (default 10),
+    * KAFKA_COMMIT_MESSAGES_INTERVAL: Interval in messages for kafka commit (default 10),
    Environment configuration also may be set up in docker-compose.yml file in environment list
