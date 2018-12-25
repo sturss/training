@@ -69,5 +69,5 @@ class ZookeeperManager:
     @classmethod
     @Connection.check_connection
     async def remove(cls, node):
-        await cls.connection.delete(node)
+        await cls.connection.deleteall(node)
 
