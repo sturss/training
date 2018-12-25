@@ -7,6 +7,10 @@ _engine = None
 
 
 async def get_engine():
+    """
+    Creates or retrieves if exists engine for Postgres connection
+    :return: aiopg.sa.Engine
+    """
     from aiopg.sa import create_engine
 
     global _engine

@@ -30,14 +30,37 @@ class Consumer:
 
     @classmethod
     def add_listener(cls, listener):
-        cls._listeners.add(listener)
+        """
+        Adds callable to the list of callback functions
+        :param listener: callable
+        :return: None
+        :raises: TypeError - if given parameter is not callable
+        """
+        if callable(listener):
+            cls._listeners.add(listener)
+        else:
+            raise TypeError(f"Should be callable, not {type(listener)}")
 
     @classmethod
     def remove_listener(cls, listener):
-        cls._listeners.remove(listener)
+        """
+        Removes callable from the list of callback functions
+        :param listener: callable
+        :return: None
+        :raises: TypeError - if given parameter is not callable
+        """
+        if callable(listener):
+            cls._listeners.remove(listener)
+        else:
+            raise TypeError(f"Should be callable, not {type(listener)}")
 
     @classmethod
     async def connect(cls, on_message=()):
+        """
+        Starts Consumer as a parallel task in an event loop
+        :param on_message: callback function or list, set or tuple of callables
+        :return: None
+        """
         if callable(on_message):
             cls._listeners.add(on_message)
         else:
@@ -46,9 +69,17 @@ class Consumer:
 
     @classmethod
     async def close(cls):
+        """
+        Cancels all created asynchronous tasks and stops consumer if connection is still on
+        :return: None
+        """
         try:
-            cls._commit_task.cancel()
-            cls._reader_task.cancel()
+            if cls._commit_task:
+                cls._commit_task.cancel()
+            if cls._reader_task:
+                cls._reader_task.cancel()
+            cls._commit_task = None
+            cls._reader_task = None
         except Exception as e:
             logger.error("Error occurred while trying to close connection with Kafka: %s", e)
         finally:
@@ -57,10 +88,20 @@ class Consumer:
 
     @classmethod
     async def _get_last_offset(cls):
+        """
+        Returns a tuple with TopicPartition object and last recorded message offset
+        :return: tuple(TopicPartition, int)
+        """
         return TopicPartition('movie', 0), await OffsetStorage.get_value('offset')
 
     @classmethod
     async def _init(cls):
+        """
+        Initiates Consumer object, creates AIOKafkaConsumer object, ensures there are values in Redis or Zookeeper
+        for offset and message counter. Tries to establish connection until success with 3 seconds pauses and sets
+        Consumer listen to messages from the last recorded offset
+        :return: None
+        """
         await OffsetStorage.ensure_record('offset', value=0)
         await OffsetStorage.ensure_record('offset_counter', value=0)
 
@@ -85,6 +126,11 @@ class Consumer:
 
     @classmethod
     async def _interval_commit(cls):
+        """
+        Each time the given interval is passed makes commit to kafka if there are new messages since last commit.
+        If commit has been made in another place while waiting, passed time is recalculated
+        :return: None
+        """
         if cls._last_commit_time is None:
             cls._last_commit_time = time.time()
         while True:
@@ -101,6 +147,13 @@ class Consumer:
 
     @classmethod
     async def _listen(cls):
+        """
+        Initializes Consumer and listen to new messages in Kafka, each message is passed to all callbacks in listeners
+        object. After message is processed offset is stored in Redis or Zookeeper. Also message counter is incremented
+        until it reaches value of KAFKA_COMMIT_MESSAGES_INTERVAL configuration last offset is committed and counter
+        is zeroed
+        :return: None
+        """
         await cls._init()
         counter = await OffsetStorage.get_value('offset_counter')
         while True:
