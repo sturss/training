@@ -8,8 +8,6 @@ services:
     build: ./consumer/
     environment:
       DOCKER: 1
-      DATABASE: POSTGRES
-      OFFSET_STORAGE: REDIS
     volumes:
       - ./consumer:/consumer
     ports:

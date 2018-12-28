@@ -24,9 +24,20 @@ class RedisManager:
         Creates Redis object with given in configurations host and initiates connection
         :return: None
         """
-        logger.info("Establishing connection with Redis: %s:%s", Configs['REDIS_HOST'], Configs['REDIS_PORT'])
-        cls.connection = await rd.create_redis(f"redis://{Configs['REDIS_HOST']}:{Configs['REDIS_PORT']}",
-                                               loop=asyncio.get_event_loop())
+        logger.info("Establishing connection with Redis: %s:%s", Configs['REDIS_ADDRESS'], Configs['REDIS_PORT'])
+        for i in range(Configs['REDIS_CONNECTION_RETRIES']):
+            try:
+                cls.connection = await rd.create_redis(f"redis://{Configs['REDIS_ADDRESS']}:{Configs['REDIS_PORT']}",
+                                                       loop=asyncio.get_event_loop())
+                logger.info("Connection with Redis has been established successfully")
+                break
+            except Exception as e:
+                logger.warning("Couldn't connect to Redis, another try in %s seconds: %s",
+                               Configs['REDIS_CONNECTION_TIMEOUT'], e)
+                await asyncio.sleep(Configs['REDIS_CONNECTION_TIMEOUT'])
+        else:
+            logger.critical("Couldn't connect to Redis, check your settings and try again."
+                            " (Consider increasing number of retries)")
 
     @classmethod
     async def close(cls):
