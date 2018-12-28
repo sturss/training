@@ -1,7 +1,7 @@
 """
     Module with all functionality related to Zookeeper
 """
-
+import asyncio
 from aiozk import ZKClient
 from api.config import Configs
 from api.logger import logger
@@ -23,10 +23,21 @@ class ZookeeperManager:
         Creates ZKClient object with given in configurations host and initiates connection
         :return: None
         """
-        logger.info("Establishing connection with Zookeeper: %s:%s", Configs['ZOOKEEPER_HOST'],
+        logger.info("Establishing connection with Zookeeper: %s:%s", Configs['ZOOKEEPER_ADDRESS'],
                     Configs['ZOOKEEPER_PORT'])
-        cls.connection = ZKClient(f"{Configs['ZOOKEEPER_HOST']}:{Configs['ZOOKEEPER_PORT']}")
-        await cls.connection.start()
+        cls.connection = ZKClient(f"{Configs['ZOOKEEPER_ADDRESS']}:{Configs['ZOOKEEPER_PORT']}")
+        for i in range(Configs['ZOOKEEPER_CONNECTION_RETRIES']):
+            try:
+                await cls.connection.start()
+                logger.info("Connection with Zookeeper has been established successfully")
+                break
+            except Exception as e:
+                logger.warning("Couldn't connect to Zookeeper, another try in %s seconds: %s",
+                               Configs['ZOOKEEPER_CONNECTION_TIMEOUT'], e)
+                await asyncio.sleep(Configs['ZOOKEEPER_CONNECTION_TIMEOUT'])
+        else:
+            logger.critical("Couldn't connect to Zookeeper, check your settings and try again."
+                            " (Consider increasing number of retries)")
 
     @classmethod
     async def close(cls):
